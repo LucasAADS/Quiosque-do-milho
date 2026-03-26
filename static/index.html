@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌽 Quiosque do Milho</title>
+<title>🌽 Quiosque do Milho </title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -251,6 +251,155 @@ tbody td:first-child { color:var(--text); font-weight:500; }
 .loading { padding:40px; text-align:center; color:var(--text3); }
 .dot-pulse::after { content:'...'; animation:dots 1.2s infinite; }
 @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+
+/* ══ RESPONSIVO MOBILE / TABLET ══════════════════════ */
+
+/* Tablet (até 900px) */
+@media (max-width: 900px) {
+  .sidebar { width: 180px; }
+  .logo-name { font-size: 14px; }
+  .nav-item { font-size: 12.5px; padding: 10px 10px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .caixa-summary { grid-template-columns: 1fr 1fr; }
+  .fin-summary { grid-template-columns: 1fr 1fr; }
+}
+
+/* Mobile (até 640px) — esconde sidebar, mostra nav inferior */
+@media (max-width: 640px) {
+  body { flex-direction: column; height: 100dvh; }
+
+  /* Esconde a sidebar lateral */
+  .sidebar { display: none; }
+
+  /* Nav inferior fixo */
+  .bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    transition: all 0.18s;
+    flex: 1;
+  }
+
+  .bottom-nav-item .bn-icon { font-size: 20px; line-height: 1; }
+  .bottom-nav-item.active { color: var(--gold); }
+  .bottom-nav-item.active .bn-icon { transform: scale(1.15); }
+
+  /* Main ocupa tudo menos o nav inferior */
+  .main { flex: 1; overflow: hidden; padding-bottom: 60px; }
+
+  /* Topbar menor */
+  .topbar { height: 50px; padding: 0 14px; }
+  .page-title { font-size: 14px; }
+
+  /* Conteúdo com padding menor */
+  .content { padding: 14px; }
+
+  /* PDV: produtos em cima, carrinho embaixo em abas */
+  .page#page-pdv { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+  .pdv-produtos { padding: 12px; }
+  .produtos-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .prod-card { padding: 12px 8px; }
+  .prod-card .emoji { font-size: 22px; margin-bottom: 5px; }
+  .prod-card .pname { font-size: 11px; }
+  .prod-card .pprice { font-size: 13px; }
+
+  /* Carrinho escondido por padrão no mobile, aparece via aba */
+  .carrinho { display: none; position: fixed; inset: 0; bottom: 60px; z-index: 40; overflow-y: auto; border-left: none; border-top: 1px solid var(--border); }
+  .carrinho.mobile-open { display: flex; flex-direction: column; }
+
+  /* Botão flutuante do carrinho */
+  .cart-fab {
+    display: flex !important;
+    position: fixed;
+    bottom: 70px;
+    right: 16px;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(240,180,41,0.4);
+    z-index: 45;
+    transition: all 0.2s;
+  }
+
+  .cart-fab-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--red);
+    color: white;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* KPIs em 2 colunas */
+  .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kpi-value { font-size: 20px; }
+
+  /* Grids de 2 colunas viram 1 coluna */
+  div[style*="grid-template-columns:1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .caixa-summary { grid-template-columns: 1fr !important; gap: 10px; }
+  .fin-summary { grid-template-columns: 1fr !important; gap: 10px; }
+
+  /* Tabelas com scroll horizontal */
+  .hist-table-wrap { overflow-x: auto; }
+  table { min-width: 480px; }
+
+  /* Modal ocupa tela inteira no mobile */
+  .modal { width: 100% !important; max-width: 100% !important; border-radius: var(--radius) var(--radius) 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-height: 85vh; margin: 0; }
+  .overlay { align-items: flex-end; }
+
+  /* Botões de pagamento menores */
+  .pgto-btn { padding: 8px 4px; font-size: 11px; }
+
+  /* Botão finalizar maior para touch */
+  .btn-finalizar { padding: 18px; font-size: 17px; }
+
+  /* Aviso caixa fechado compacto */
+  #aviso-caixa-fechado { margin: 8px 10px 0; }
+}
+
+/* Telas muito pequenas (até 380px) */
+@media (max-width: 380px) {
+  .produtos-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .kpi-value { font-size: 17px; }
+}
 </style>
 </head>
 <body>
@@ -287,6 +436,34 @@ tbody td:first-child { color:var(--text); font-weight:500; }
     <div class="date-display" id="datedisp">--/--/----</div>
   </div>
 </aside>
+
+<!-- NAV INFERIOR (mobile only — oculto no desktop) -->
+<nav class="bottom-nav" style="display:none">
+  <div class="bottom-nav-item active" id="bn-pdv" onclick="showPage('pdv',this);setBottomNav('bn-pdv')">
+    <span class="bn-icon">🛒</span>Venda
+  </div>
+  <div class="bottom-nav-item" id="bn-dashboard" onclick="showPage('dashboard',this);setBottomNav('bn-dashboard')">
+    <span class="bn-icon">📊</span>Resumo
+  </div>
+  <div class="bottom-nav-item" id="bn-historico" onclick="showPage('historico',this);setBottomNav('bn-historico')">
+    <span class="bn-icon">📋</span>Histórico
+  </div>
+  <div class="bottom-nav-item" id="bn-cardapio" onclick="showPage('cardapio',this);setBottomNav('bn-cardapio')">
+    <span class="bn-icon">🍽️</span>Cardápio
+  </div>
+  <div class="bottom-nav-item" id="bn-caixa" onclick="showPage('caixa',this);setBottomNav('bn-caixa')">
+    <span class="bn-icon">💰</span>Caixa
+  </div>
+  <div class="bottom-nav-item" id="bn-compras" onclick="showPage('compras',this);setBottomNav('bn-compras')">
+    <span class="bn-icon">📦</span>Compras
+  </div>
+</nav>
+
+<!-- BOTÃO FLUTUANTE DO CARRINHO (mobile only) -->
+<button class="cart-fab" id="cart-fab" onclick="toggleCarrinhoMobile()" style="display:none">
+  🧺
+  <span class="cart-fab-badge" id="cart-fab-badge" style="display:none">0</span>
+</button>
 
 <!-- MAIN -->
 <div class="main">
@@ -486,7 +663,7 @@ tbody td:first-child { color:var(--text); font-weight:500; }
 </div>
 
 <script>
-const API = 'pontodomilho.up.railway.app';
+const API = 'http://localhost:5000/api';
 let currentPage = 'pdv';
 let cart = [];
 let pgtoSelecionado = 'dinheiro';
@@ -623,6 +800,7 @@ function renderCart() {
   totalEl.textContent = fmt(total);
   finBtn.disabled = cart.length === 0 || !caixaAberto;
   calcTroco();
+  atualizarFabCarrinho();
 
   if (cart.length === 0) {
     container.innerHTML = `<div class="cart-empty"><div class="icon">🌽</div><div>Nenhum item ainda</div></div>`;
@@ -1332,8 +1510,53 @@ function closeOverlay(e) {
   if (!e || e.target.id === 'overlay') document.getElementById('overlay').classList.remove('open');
 }
 
-// INIT
+// ── MOBILE ────────────────────────────────────────
+function isMobile() { return window.innerWidth <= 640; }
+
+function setBottomNav(activeId) {
+  document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(activeId);
+  if (el) el.classList.add('active');
+  if (activeId !== 'bn-pdv') {
+    document.querySelector('.carrinho')?.classList.remove('mobile-open');
+  }
+}
+
+function toggleCarrinhoMobile() {
+  const carrinho = document.querySelector('.carrinho');
+  if (!carrinho) return;
+  carrinho.classList.toggle('mobile-open');
+}
+
+function atualizarFabCarrinho() {
+  if (!isMobile()) return;
+  const fab = document.getElementById('cart-fab');
+  const badge = document.getElementById('cart-fab-badge');
+  if (!fab) return;
+  const total = cart.reduce((s, i) => s + i.quantidade, 0);
+  badge.textContent = total;
+  badge.style.display = total > 0 ? 'flex' : 'none';
+}
+
+function injetarBotaoFecharCarrinho() {
+  if (!isMobile()) return;
+  const header = document.querySelector('.carrinho-header');
+  if (!header || header.querySelector('.btn-fechar-carrinho')) return;
+  const btn = document.createElement('button');
+  btn.className = 'btn-fechar-carrinho';
+  btn.innerHTML = '✕ Fechar';
+  btn.style.cssText = 'background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:12px;cursor:pointer;padding:5px 10px;border-radius:7px;margin-left:auto';
+  btn.onclick = () => document.querySelector('.carrinho').classList.remove('mobile-open');
+  header.appendChild(btn);
+}
+
+window.addEventListener('resize', () => {
+  if (isMobile()) injetarBotaoFecharCarrinho();
+});
+
+// ── INIT ──────────────────────────────────────────
 loadProdutosPDV();
+if (isMobile()) injetarBotaoFecharCarrinho();
 </script>
 </body>
 </html>
