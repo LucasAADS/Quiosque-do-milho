@@ -663,7 +663,7 @@ tbody td:first-child { color:var(--text); font-weight:500; }
 </div>
 
 <script>
-const API = 'http://localhost:5000/api';
+const API = '/api';
 let currentPage = 'pdv';
 let cart = [];
 let pgtoSelecionado = 'dinheiro';
@@ -1297,12 +1297,47 @@ async function saveProduto(id) {
     nome: g('f-nome'), categoria: g('f-cat'),
     preco: parseFloat(g('f-preco')), emoji: g('f-emoji') || '🌽', ativo: 1
   };
+
+  if (!payload.nome) { alert('Informe o nome do produto.'); return; }
+  if (isNaN(payload.preco) || payload.preco <= 0) { alert('Informe um preço válido.'); return; }
+
   const url = id ? `${API}/produtos/${id}` : `${API}/produtos`;
   const method = id ? 'PUT' : 'POST';
-  await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-  closeOverlay();
-  loadCardapio();
-  loadProdutosPDV();
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (_) {
+      data = null;
+    }
+
+    if (!res.ok) {
+      const msg = data?.erro || `Erro HTTP ${res.status}`;
+      console.error('saveProduto() — resposta do servidor:', res.status, data);
+      alert('Erro ao salvar produto: ' + msg);
+      return;
+    }
+
+    if (data && data.ok === false) {
+      console.error('saveProduto() — servidor retornou ok:false:', data);
+      alert('Erro ao salvar produto: ' + (data.erro || 'Erro desconhecido'));
+      return;
+    }
+
+    closeOverlay();
+    loadCardapio();
+    loadProdutosPDV();
+  } catch (e) {
+    console.error('saveProduto() — falha na requisição:', e);
+    alert('Falha ao conectar com o servidor. Verifique sua conexão e tente novamente.\nDetalhe: ' + e.message);
+  }
 }
 
 // ── COMPRAS ───────────────────────────────────────
