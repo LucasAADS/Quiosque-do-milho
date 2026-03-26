@@ -149,12 +149,34 @@ def get_todos_produtos():
 
 @app.route('/api/produtos', methods=['POST'])
 def add_produto():
-    d = request.json
-    conn = get_db()
-    exe(conn, 'INSERT INTO produtos (nome, categoria, preco, emoji) VALUES (?,?,?,?)',
-        (d['nome'], d.get('categoria',''), d['preco'], d.get('emoji','🌽')))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    try:
+        d = request.json
+        if not d:
+            return jsonify({'ok': False, 'erro': 'Corpo da requisição inválido ou ausente'}), 400
+        if not d.get('nome'):
+            return jsonify({'ok': False, 'erro': 'Campo "nome" é obrigatório'}), 400
+        if d.get('preco') is None:
+            return jsonify({'ok': False, 'erro': 'Campo "preco" é obrigatório'}), 400
+
+        preco = float(d['preco'])
+
+        logging.debug('add_produto() — payload: %s', d)
+
+        conn = get_db()
+        novo_id = exe(conn, 'INSERT INTO produtos (nome, categoria, preco, emoji) VALUES (?,?,?,?)',
+            (d['nome'], d.get('categoria', ''), preco, d.get('emoji', '🌽')))
+        conn.close()
+
+        if novo_id is None:
+            logging.error('add_produto() — inserção não retornou id; registro pode não ter sido salvo')
+            return jsonify({'ok': False, 'erro': 'Falha ao registrar produto no banco de dados'}), 500
+
+        logging.info('add_produto() — produto registrado com id=%s', novo_id)
+        return jsonify({'ok': True, 'id': novo_id})
+
+    except (KeyError, ValueError, TypeError) as e:
+        logging.error('add_produto() — erro de validação: %s', e)
+        return jsonify({'ok': False, 'erro': f'Dados inválidos: {e}'}), 400
 
 @app.route('/api/produtos/<int:id>', methods=['PUT'])
 def update_produto(id):
