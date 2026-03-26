@@ -1,7 +1,12 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-import os, psycopg2, psycopg2.extras
+import os, psycopg2, psycopg2.extras, logging
 from datetime import datetime, timedelta, timezone
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+)
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
@@ -37,18 +42,26 @@ def qone(conn, sql, params=()):
     return rows[0] if rows else None
 
 def exe(conn, sql, params=()):
-    """Executa INSERT/UPDATE/DELETE, retorna lastrowid se for INSERT."""
+    """Executa INSERT/UPDATE/DELETE, retorna o id gerado em INSERTs ou None."""
     sql = sql.replace('?', '%s')
-    # PostgreSQL: usa RETURNING id para INSERT
+    is_write = sql.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE'))
+    # PostgreSQL: usa RETURNING id para obter o id gerado pelo INSERT
     if sql.strip().upper().startswith('INSERT') and 'RETURNING' not in sql.upper():
         sql = sql + ' RETURNING id'
-    with conn.cursor() as cur:
-        cur.execute(sql, params)
-        try:
-            row = cur.fetchone()
-            return row[0] if row else None
-        except Exception:
-            return None
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            result = None
+            if sql.strip().upper().startswith('INSERT'):
+                row = cur.fetchone()
+                result = row[0] if row else None
+        if is_write:
+            conn.commit()
+        return result
+    except Exception as e:
+        logging.error('exe() falhou — sql: %s | params: %s | erro: %s', sql, params, e)
+        conn.rollback()
+        return None
 
 def init_db():
     conn = get_db()
@@ -359,17 +372,38 @@ def get_compras():
 
 @app.route('/api/compras', methods=['POST'])
 def add_compra():
-    d = request.json
-    qtd    = float(d.get('quantidade', 1))
-    vunit  = float(d['valor_unit'])
-    vtotal = round(qtd * vunit, 2)
-    conn = get_db()
-    exe(conn,
-        'INSERT INTO compras (fornecedor_id, fornecedor_nome, descricao, quantidade, unidade, valor_unit, valor_total, pago, data) VALUES (?,?,?,?,?,?,?,?,?)',
-        (d.get('fornecedor_id'), d.get('fornecedor_nome', ''), d['descricao'],
-         qtd, d.get('unidade', 'un'), vunit, vtotal, 0, agora()))
-    conn.commit(); conn.close()
-    return jsonify({'ok': True})
+    try:
+        d = request.json
+        if not d:
+            return jsonify({'ok': False, 'erro': 'Corpo da requisição inválido ou ausente'}), 400
+        if not d.get('descricao'):
+            return jsonify({'ok': False, 'erro': 'Campo "descricao" é obrigatório'}), 400
+        if d.get('valor_unit') is None:
+            return jsonify({'ok': False, 'erro': 'Campo "valor_unit" é obrigatório'}), 400
+
+        qtd    = float(d.get('quantidade', 1))
+        vunit  = float(d['valor_unit'])
+        vtotal = round(qtd * vunit, 2)
+
+        logging.debug('add_compra() — payload: %s', d)
+
+        conn = get_db()
+        novo_id = exe(conn,
+            'INSERT INTO compras (fornecedor_id, fornecedor_nome, descricao, quantidade, unidade, valor_unit, valor_total, pago, data) VALUES (?,?,?,?,?,?,?,?,?)',
+            (d.get('fornecedor_id'), d.get('fornecedor_nome', ''), d['descricao'],
+             qtd, d.get('unidade', 'un'), vunit, vtotal, 0, agora()))
+        conn.close()
+
+        if novo_id is None:
+            logging.error('add_compra() — inserção não retornou id; registro pode não ter sido salvo')
+            return jsonify({'ok': False, 'erro': 'Falha ao registrar compra no banco de dados'}), 500
+
+        logging.info('add_compra() — compra registrada com id=%s', novo_id)
+        return jsonify({'ok': True, 'id': novo_id})
+
+    except (KeyError, ValueError, TypeError) as e:
+        logging.error('add_compra() — erro de validação: %s', e)
+        return jsonify({'ok': False, 'erro': f'Dados inválidos: {e}'}), 400
 
 @app.route('/api/compras/<int:id>', methods=['DELETE'])
 def delete_compra(id):
